@@ -89,6 +89,24 @@ aggregateItems {
 
 */
 
+const doSearch = async () => {
+  console.log(
+    "search for beer",
+    (
+      await API.graphql({
+        query: searchTodos,
+        variables: {
+          filter: {
+            name: {
+              match: "beer",
+            },
+          },
+        },
+      })
+    ).data.searchTodos.items
+  );
+};
+
 const getAggregates = async () => {
   (
     await API.graphql({
@@ -113,8 +131,11 @@ const getAggregates = async () => {
   await clearTestData();
   await createTestData();
 
-  console.log('letting data "settle", then getting aggs');
-  setTimeout(() => getAggregates(), 5000);
+  console.log('letting data "settle", then searching and aggregating');
+  setTimeout(async () => {
+    await doSearch();
+    await getAggregates();
+  }, 5000);
 })();
 
 function App() {
