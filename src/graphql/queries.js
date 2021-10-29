@@ -32,14 +32,12 @@ export const searchTodos = /* GraphQL */ `
         name
         result {
           ... on SearchableAggregateScalarResult {
-            __typename
             value
           }
           ... on SearchableAggregateBucketResult {
-            __typename
             buckets {
-              doc_count
               key
+              doc_count
             }
           }
         }

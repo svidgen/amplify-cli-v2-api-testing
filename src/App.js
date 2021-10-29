@@ -19,21 +19,24 @@ const createTestData = async () => {
 
   const responses = [];
 
-  for (const [name, points] of tasks) {
-    responses.push(
-      await API.graphql({
-        query: createTodo,
-        variables: {
-          input: {
-            name,
-            description: `${name} description`,
-            points,
+  const batches = 20;
+  for (var i = 0; i < batches; i++) {
+    for (const [name, points] of tasks) {
+      responses.push(
+        await API.graphql({
+          query: createTodo,
+          variables: {
+            input: {
+              name,
+              description: `${name} description`,
+              points,
+            },
           },
-        },
-      })
-    );
+        })
+      );
+    }
+    console.log(`batch ${i} of ${batches} created`);
   }
-
   console.log("create responses", responses);
 };
 
@@ -58,37 +61,6 @@ const clearTestData = async () => {
   }
 };
 
-// const aggregates = ['sum'];
-// for (const agg of aggregates) {
-//   console.log(`aggs ${agg}`,
-//     await API.graphql.searchTodos({
-
-//     })
-//   );
-// }
-
-/*
-queries.js needs `aggregateItems` modfied to be this:
-
-aggregateItems {
-  name
-  result {
-    ... on SearchableAggregateScalarResult {
-      __typename
-      value
-    }
-    ... on SearchableAggregateBucketResult {
-      __typename
-      buckets {
-        doc_count
-        key
-      }
-    }
-  }
-}
-
-*/
-
 const doSearch = async () => {
   console.log(
     "search for beer",
@@ -108,10 +80,12 @@ const doSearch = async () => {
 };
 
 const getAggregates = async () => {
-  (
+  const result = (
     await API.graphql({
       query: searchTodos,
       variables: {
+        sort: [{ field: "name", direction: "desc" }],
+        limit: 20,
         aggregates: [
           { type: "max", field: "points", name: "max" },
           { type: "min", field: "points", name: "min" },
@@ -121,9 +95,17 @@ const getAggregates = async () => {
         ],
       },
     })
-  ).data.searchTodos.aggregateItems.forEach((item) => {
+  ).data.searchTodos;
+
+  result.aggregateItems.forEach((item) => {
     console.log(item.name, item.result.value || item.result.buckets);
   });
+
+  console.log(
+    "item names",
+    result.items.map((item) => item.name)
+  );
+  console.log("total", result.total);
 };
 
 (async () => {
